@@ -81,9 +81,9 @@ class Bot:
         self.driver.get('https://www.instagram.com/explore/tags/%s/' % hashtag)
         wait(2)
 
-        for i in range(4):
+        for _ in range(4):
             scroll_down(self.driver)
-            wait(2)
+            wait(1)
 
         # Using set to make unique hrefs
         hrefs = set([item.get_attribute('href') for item in self.driver.find_elements_by_tag_name(
@@ -99,40 +99,37 @@ class Bot:
 
             try:
                 wait(random.randint(2, 4))
-                #/html/body/script[1]
-                meta_content = self.driver.find_element_by_xpath(
-                    '//meta[@property="og:description"]').get_attribute('content')
-
-                user = follower_regex.search(meta_content).groups(0)
-
-                    print(user)
-
-                    wait(1000)
-
-
-                self.following.update(
-                    {'user': user}, {'user': user, 'follower': self.username}, upsert=True)
 
                 try:
+                    # Following section
                     follow_button = self.driver.find_element_by_xpath(
                         '//button[text()="Follow"]')
 
                     if follow_button and follow:
+                        meta_content = self.driver.find_element_by_xpath(
+                            '//meta[@property="og:description"]').get_attribute('content')
+                        user = follower_regex.search(meta_content).group(1)
+
+                        self.following.update(
+                            {'user': user}, {'user': user, 'follower': self.username}, upsert=True)
+
                         follow_button.click()
 
                 except Exception as e:
                     logging.info('Already following...')
 
+                # Liking section
                 like_button = self.driver.find_element_by_xpath(
                     '//span[@aria-label="Like"]')
                 like_button.click()
+
                 for second in reversed(range(0, random.randint(18, 28))):
                     logging.info("#" + hashtag + ': unique photos left: ' + str(unique_photos)
                                  + " | Sleeping " + str(second))
                     wait(1)
+
             except Exception as e:
                 logging.error(e)
                 wait(2)
-                wait(100)
 
             unique_photos -= 1
