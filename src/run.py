@@ -17,7 +17,6 @@ if __name__ == "__main__":
     if _bot.login():
         for hashtag in args.ht:
             _bot.run(hashtag, follow=args.f)
-
         _bot.close()
     else:
         _bot.close()

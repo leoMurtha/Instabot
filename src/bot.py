@@ -37,7 +37,7 @@ class Bot:
 
     def close(self):
         self.driver.close()
-        print('Closed the bot successfully')
+        logging.info('Closed the bot successfully')
 
     def login(self):
         # <a href='/accounts/login/?source=auth_switcher'>Conecte-se</a> //a[@href'accounts/login']
