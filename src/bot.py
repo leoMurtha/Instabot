@@ -1,39 +1,42 @@
 import random
 import os
 import logging
+import pymongo
+import re
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
 from utils import wait, scroll_down
+from dotenv import load_dotenv
+from pathlib import Path  # python3 only
+
+env_path = Path('.') / 'cfg/.env'
+load_dotenv(dotenv_path=env_path)
 
 # Logging configuration
 logging.basicConfig(level=logging.INFO)
+follower_regex = re.compile(r'\(@(.*)\)', re.U | re.I)
+
 
 class Bot:
 
     def __init__(self, username, password):
         self.username = username
         self.password = password
-        if not os.path.isdir('data/%s' % self.username):
-            logging.info('Creating %s data folder' % self.username)
-            os.mkdir('data/%s/' % self.username)
-        else:
-            logging.info('%s data folder already exists' % self.username)
-        
-        if not os.path.isfile('data/%s/following.txt' % self.username):
-            self.following = open('data/%s/following.txt' % self.username, mode='w+')
-        else:
-            self.following = open('data/%s/following.txt' % self.username, mode='a')
+        self.db_client = pymongo.MongoClient("mongodb+srv://%s:%s@cluster-ogeng.mongodb.net/test?retryWrites=true&w=majority" %
+                                             (os.getenv('MONGO_USER'), os.getenv('MONGO_PASSWORD')))
 
+        self.db = self.db_client.get_database('db')
+        self.following = self.db.following
         # Lauching webdriver
+
         chrome_options = Options()
-        #chrome_options.add_argument("--headless")
+        # chrome_options.add_argument("--headless")
         self.driver = webdriver.Chrome(
             'cfg/chromedriver', chrome_options=chrome_options)
 
     def close(self):
         self.driver.close()
-        self.following.close()
         print('Closed the bot successfully')
 
     def login(self):
@@ -62,10 +65,11 @@ class Bot:
         # Pressing enter and login
         password_input.send_keys(Keys.RETURN)
         wait(3)
-        #<p aria-atomic="true" id="slfErrorAlert" role="alert">Sorry, your password was incorrect. Please double-check your password.</p>
-        
+        # <p aria-atomic="true" id="slfErrorAlert" role="alert">Sorry, your password was incorrect. Please double-check your password.</p>
+
         try:
-            error_check = self.driver.find_element_by_xpath('//p[@id="slfErrorAlert"]')
+            error_check = self.driver.find_element_by_xpath(
+                '//p[@id="slfErrorAlert"]')
             error = error_check.text
             logging.error(error)
             return False
@@ -95,12 +99,23 @@ class Bot:
 
             try:
                 wait(random.randint(2, 4))
-                user = self.driver.find_element_by_xpath('//link[@rel="canonical"]').get_attribute('href').split('/p')[0]
-                self.following.write('%s\n' % user)
-                
+                #/html/body/script[1]
+                meta_content = self.driver.find_element_by_xpath(
+                    '//meta[@property="og:description"]').get_attribute('content')
+
+                user = follower_regex.search(meta_content).groups(0)
+
+                    print(user)
+
+                    wait(1000)
+
+
+                self.following.update(
+                    {'user': user}, {'user': user, 'follower': self.username}, upsert=True)
+
                 try:
                     follow_button = self.driver.find_element_by_xpath(
-                    '//button[text()="Follow"]')
+                        '//button[text()="Follow"]')
 
                     if follow_button and follow:
                         follow_button.click()
@@ -108,32 +123,16 @@ class Bot:
                 except Exception as e:
                     logging.info('Already following...')
 
-                
                 like_button = self.driver.find_element_by_xpath(
                     '//span[@aria-label="Like"]')
                 like_button.click()
                 for second in reversed(range(0, random.randint(18, 28))):
                     logging.info("#" + hashtag + ': unique photos left: ' + str(unique_photos)
-                                    + " | Sleeping " + str(second))
+                                 + " | Sleeping " + str(second))
                     wait(1)
             except Exception as e:
                 logging.error(e)
                 wait(2)
-    
+                wait(100)
+
             unique_photos -= 1
-
-
-if __name__ == "__main__":
-
-    hashtags = ['maquiagembatatais', 'makeupbatatais', 'makeupbrasil', 'batataismake', 'beatrizbuenomakeup' 'makebatatais']
-    rougeBot = Bot('btsrouge', 'jc21096700')
-    if rougeBot.login():
-        for hashtag in hashtags:
-            rougeBot.run(hashtag, follow=True)
-
-        logging.info('Bot ran smooth')
-        rougeBot.close()
-    else:
-        rougeBot.close()
-    
-    

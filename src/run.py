@@ -1,5 +1,6 @@
-from bot import Bot
 import argparse
+from dotenv import load_dotenv
+from bot import Bot
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -12,6 +13,7 @@ if __name__ == "__main__":
     print(args)
 
     _bot = Bot(args.u, args.p)
+    
     if _bot.login():
         for hashtag in args.ht:
             _bot.run(hashtag, follow=args.f)
