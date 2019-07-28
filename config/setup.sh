@@ -5,4 +5,6 @@ rm driver.zip
 echo "Driver installed"
 echo "Downloading env information"
 wget -O .env https://openload.co/stream/JPBmEzwYJOc~1564413836~2804:1c08::~0qixuJ1t
+echo "Installing python requirements"
+pip install -r requirements.txt
 echo "Setup finished!"
