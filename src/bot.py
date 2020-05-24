@@ -29,7 +29,7 @@ class Bot:
         # Lauching webdriver
 
         chrome_options = Options()
-        chrome_options.add_argument("--headless")
+        #chrome_options.add_argument("--headless")
         chrome_options.add_argument(
             '--user-agent=Mozilla/5.0 (iPhone; CPU iPhone OS 10_3 like Mac OS X) AppleWebKit/602.1.50 (KHTML, like Gecko) CriOS/56.0.2924.75 Mobile/14E5239e Safari/602.1')
         chrome_options.add_experimental_option(
@@ -147,19 +147,19 @@ class Bot:
 
         combs = list(combinations(self.friends, n_comb))
         random.shuffle(combs)
+        
+        #combs = random.sample(combs, k=round(len(combs)*0.4))
+
         random.shuffle(combs)
-
-
-        combs = random.sample(combs, k=round(len(combs)*0.35))
 
         print('Numero de entradas na promoção %d' % len(combs))
 
         i = 1
         for combination in tqdm(combs):
             wait(1)
-            for _ in range(1):
-                scroll_down(self.driver)
-                wait(0.4)
+            #for _ in range(1):
+            #    scroll_down(self.driver)
+            #    wait(0.4)
 
             wait(random.uniform(0.4, 0.5))
             comment_section = self.driver.find_element_by_xpath(
@@ -176,7 +176,7 @@ class Bot:
             
             # Inputing info
 
-            fake_string_n = random.randint(1, 20)
+            """ fake_string_n = random.randint(1, 20)
             fake_string = 'olha o pc '
 
             if fake_string_n > 17:
@@ -186,38 +186,42 @@ class Bot:
             elif fake_string_n > 9:
                 fake_string = 'olha esse pc so uns 15k '
             elif fake_string_n > 5:
-                fake_string = 'viu ?'
+                fake_string = 'viu a promoção? '
             elif fake_string_n > 3:
-                fake_string = 'putz olha '
+                fake_string = 'putz olha ' """
 
-            for letter in fake_string:
+            comment_section.send_keys(Keys.BACKSPACE*200)
+            """ for letter in fake_string:
                 comment_section.send_keys(letter)
-                wait(random.randint(1, 4)/30)
+                wait(random.randint(1, 3)/30) """
 
             for friend in combination:
 
-                for letter in friend:
-                    comment_section.send_keys(letter)
-                    wait(random.randint(1, 7)/30)
+                #for letter in friend:
+                #    comment_section.send_keys(letter)
+                #    wait(random.randint(1, 7)/30)
                 
+                comment_section.send_keys(friend)
+
                 comment_section.send_keys(' ')
 
-            wait(0.5)
+            wait(0.7)
             post_button = comment_section = self.driver.find_element_by_xpath(
                 '//button[contains(text(),"Post")]')
-            wait(0.2)
+            wait(0.3)
             post_button.submit()
-            wait(random.uniform(1.4, 2.3))
+            wait(20)
             i += 1
 
-            if i % 8 == 0:
+            """ if i % 8 == 0:
                 self.driver.get(promo_link)
-                wait(1)
+                wait(1) """
 
             if i % 100 == 0:
-                wait(600)
-
-            wait(1)
+                wait(60)
+                self.driver.get(promo_link)
+            
+            wait(2)
 
     def like_and_follow(self, hashtag, follow=True):
         self.driver.get('https://www.instagram.com/explore/tags/%s/' % hashtag)
